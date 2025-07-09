@@ -1,0 +1,3 @@
+[submodule "Day4_vault_init_deposit_withdraw/anchor-vault"]
+	path = Day4_vault_init_deposit_withdraw/anchor-vault
+	url = https://github.com/ytw7/onChainVault.git
