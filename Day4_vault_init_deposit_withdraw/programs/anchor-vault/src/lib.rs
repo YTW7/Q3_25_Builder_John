@@ -38,7 +38,7 @@ pub struct Initialize<'info> {
         seeds = [b"vault", vault_state.key().as_ref()],
         bump
     )]
-    pub vault: SystemAccount<'info>
+    pub vault: SystemAccount<'info>,
 
 
     pub system_program: Program<'info, System>
@@ -63,7 +63,7 @@ pub struct Payment<'info>(
     pub vaul_state: Account<'info, VaultState>,
 
     pub system_program: Program<'info, System>
-)
+);
 
 impl<'info>Payment<'info>{
     pub fn deposit(&mut self, amount: u64) -> Result<()> {
@@ -73,7 +73,7 @@ impl<'info>Payment<'info>{
         let cpi_accounts = Transfer{
             from: self.user.to_account_info(),
             to: self.vault.to_account_info()
-        }
+        };
 
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
 
@@ -88,7 +88,7 @@ impl<'info>Payment<'info>{
         let cpi_accounts = Transfer{
             from: self.vault.to_account_info(),
             to: self.user.to_account_info()
-        }
+        };
 
         let seeds=&[
             b"vault",
@@ -115,11 +115,11 @@ impl<'info>Initialize<'info>{
         let cpi_accounts = Transfer{
             from: self.user.to_account_info(),
             to: self.vault.to_account_info()
-        }
+        };
 
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
 
-        transfer(cpi_ctx, lamports:rent_exempt);
+        transfer(cpi_ctx, rent_exempt);
 
         self.vault_state.vault_bump= bumps.vault;
         self.vault_state.state_bump= bumps.vault_state;
