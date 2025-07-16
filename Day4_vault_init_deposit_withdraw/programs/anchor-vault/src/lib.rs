@@ -23,6 +23,12 @@ pub mod anchor_vault {
         Ok(())
     }
 
+    pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
+        ctx.accounts.withdraw(amount)?;
+
+        Ok(())
+    }
+
 
 }
 
@@ -129,7 +135,6 @@ pub struct Withdraw<'info>{
     pub user: Signer<'info>,
 
     #[account(
-        mut,
         seeds=[b"state", user.key().as_ref()],
         bump=vault_state.state_bump,
 
@@ -147,12 +152,12 @@ pub struct Withdraw<'info>{
 }
 
 impl<'info>Withdraw<'info>{
-    pub fn deposit(&mut self, amount: u64) -> Result<()>{
+    pub fn withdraw(&mut self, amount: u64) -> Result<()>{
         let cpi_program=self.system_program.to_account_info();
 
         let cpi_accounts=Transfer{
-            from: self.user.to_account_info(),
-            to: self.vault.to_account_info(),
+            from: self.vault.to_account_info(),
+            to: self.user.to_account_info(),
         };
 
         let cpi_ctx=CpiContext::new(cpi_program, cpi_accounts);
