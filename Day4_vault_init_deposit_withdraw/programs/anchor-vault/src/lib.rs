@@ -2,8 +2,10 @@
 #![allow(deprecated)]
 
 use anchor_lang::{prelude::*, system_program::{Transfer, transfer}};
+pub mod errors;
+use errors::*;
 
-declare_id!("5dqwFTqKzdbarCRBZEAXoYjegrqCrqxcJtTXgLjNjhCa");
+declare_id!("6LEZYLofdHgCdnat4n61RcFmx7832iNcSBq6K63GruHT");
 
 #[program] //progam macro -> entry point of our program
 pub mod anchor_vault {
@@ -100,7 +102,7 @@ pub struct Deposit<'info>{
     pub vault: SystemAccount<'info>,
 
     #[account(
-        seeds = [b"state", vault_state.key().as_ref()],
+        seeds = [b"state", user.key().as_ref()],
         bump = vault_state.state_bump,
 
     )]
@@ -144,7 +146,7 @@ pub struct Withdraw<'info>{
     #[account(
         mut,
         seeds=[b"vault", vault_state.key().as_ref()],
-        bump=vault_state.state_bump,
+        bump=vault_state.vault_bump,
         
     )]
     pub vault: SystemAccount<'info>,
@@ -153,17 +155,56 @@ pub struct Withdraw<'info>{
 
 impl<'info>Withdraw<'info>{
     pub fn withdraw(&mut self, amount: u64) -> Result<()>{
-        let cpi_program=self.system_program.to_account_info();
+        // let cpi_program=self.system_program.to_account_info();
 
-        let cpi_accounts=Transfer{
+        // let cpi_accounts=Transfer{
+        //     from: self.vault.to_account_info(),
+        //     to: self.user.to_account_info(),
+        // };
+
+        // let cpi_ctx=CpiContext::new(cpi_program, cpi_accounts);
+
+        // transfer(cpi_ctx, amount)?;
+
+        // Ok(())
+
+
+
+        // get the rent exempt
+        let rent_exempt = Rent::get()?.minimum_balance(self.vault.data_len());
+
+        // get the current balance of vault
+        let current_balance = self.vault.lamports();
+
+        // check for the amount is available to withdraw
+        // we need the rent exempt to keep the account alive
+        // so we will minus the rent exempt from the current balance to get the available balance
+        require!(
+            amount <= current_balance - rent_exempt,
+            VaultError::InsufficientFunds
+        );
+
+        // system program to transfer the funds
+        let cpi_program = self.system_program.to_account_info();
+
+        // accounts that used in the transfer
+        let cpi_accounts = Transfer {
             from: self.vault.to_account_info(),
             to: self.user.to_account_info(),
         };
 
-        let cpi_ctx=CpiContext::new(cpi_program, cpi_accounts);
+        let binding = self.vault_state.key();
 
+        let seeds = &[b"vault", binding.as_ref(), &[self.vault_state.vault_bump]];
+
+        // signer seeds to sign the tx
+        let signer_seeds = &[&seeds[..]];
+
+        // cpi context for the transfer
+        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
+
+        // transferring the funds
         transfer(cpi_ctx, amount)?;
-
         Ok(())
     }
 }
