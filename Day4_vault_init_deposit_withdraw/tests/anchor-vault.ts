@@ -9,8 +9,15 @@ describe("anchor-vault", () => {
 
   const program = anchor.workspace.anchorVault as Program<AnchorVault>;
   
-  const vaultState = anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("state"), provider.publicKey.toBytes()], program.programId)[0];
-  const vault = anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("vault"), vaultState.toBytes()], program.programId)[0];
+  const vaultState = anchor.web3.PublicKey.findProgramAddressSync(
+    [Buffer.from("state"), provider.publicKey.toBytes()], 
+    program.programId
+  )[0];
+
+  const vault = anchor.web3.PublicKey.findProgramAddressSync(
+    [Buffer.from("vault"), vaultState.toBytes()], 
+    program.programId
+  )[0];
   
 
   it("Is initialized!", async () => {
