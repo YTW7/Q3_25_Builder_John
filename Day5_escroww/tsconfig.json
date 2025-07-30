@@ -6,5 +6,20 @@
     "module": "commonjs",
     "target": "es6",
     "esModuleInterop": true
-  }
+  },
+  "include": ["tests/**/*.ts"]
 }
+// {
+//   "compilerOptions": {
+//     "target": "es6",
+//     "module": "commonjs",
+//     "lib": ["es2015"],
+//     "esModuleInterop": true,
+//     "types": ["mocha", "chai"],
+//     "typeRoots": ["./node_modules/@types"],
+//     "strict": true,
+//     "resolveJsonModule": true,
+//     "skipLibCheck": true
+//   },
+//   "include": ["tests/**/*.ts"]
+// }
