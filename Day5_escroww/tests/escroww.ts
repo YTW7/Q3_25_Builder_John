@@ -119,16 +119,7 @@ before(async () => {
     // Add your test here.
     await program.methods
     .makeOffer(seed, new BN(1e6), new BN(1e6))
-    .accounts({
-    maker: maker.publicKey,
-    tokenMintA: mintA.publicKey,
-    tokenMintB: mintB.publicKey,
-    makerTokenAccountA: makerAtaA,
-    offer: escrow, // or whatever PDA your program expects
-    vault,
-    tokenProgram,
-    systemProgram: SystemProgram.programId,
-  })
+    .accounts({...accounts})
     .signers([maker])
     .rpc()
     .then(confirm)
