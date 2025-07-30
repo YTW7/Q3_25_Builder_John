@@ -69,6 +69,7 @@ impl<'info>Initialize<'info>{
             authority,
             mint_x: self.mint_x.key(),
             mint_y: self.mint_y.key(),
+            mint_lp: self.mint_lp.key(),
             fee,
             locked: false,
             config_bump: bumps.config,
