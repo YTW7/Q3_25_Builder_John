@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token::{Mint, Token, TokenAccount, Transfer, transfer}};
 use constant_product_curve::{ConstantProduct, LiquidityPair};
 
-use crate::{errors::AmmError, state::ConfigPool};
+use crate::{errors::AmmError, state::{ConfigPool, ConfigAmm}};
 
 #[derive(Accounts)]
 pub struct Swap<'info> {
@@ -19,7 +19,7 @@ pub struct Swap<'info> {
         associated_token::mint = mint_x,
         associated_token::authority = user,
     )]
-    pub user_x: Account<'info, TokenAccount>,
+    pub user_ata_x: Account<'info, TokenAccount>,
 
     #[account(
         init_if_needed,
@@ -27,7 +27,7 @@ pub struct Swap<'info> {
         associated_token::mint = mint_y,
         associated_token::authority = user,
     )]
-    pub user_y: Account<'info, TokenAccount>,
+    pub user_ata_y: Account<'info, TokenAccount>,
 
     #[account(
         mut,
@@ -44,9 +44,19 @@ pub struct Swap<'info> {
     pub vault_y: Account<'info, TokenAccount>,
 
     #[account(
+        mut,
+        seeds = [b"config_amm", config_amm.amm_seed.to_le_bytes().as_ref()],
+        bump = config_amm.config_amm_bump,
+    )]
+    pub config_amm: Account<'info, ConfigAmm>,
+
+    #[account(
         has_one = mint_x,
         has_one = mint_y,
-        seeds = [b"config_pool", config_pool.pool_seed.to_le_bytes().as_ref()],
+        seeds = [
+            b"config_pool", 
+            config_amm.key().as_ref(), 
+            config_pool.pool_seed.to_le_bytes().as_ref()],
         bump = config_pool.config_pool_bump,
     )]
     pub config_pool: Account<'info, ConfigPool>,
@@ -91,8 +101,8 @@ impl<'info> Swap<'info> {
 
     pub fn deposit_tokens(&mut self, is_x: bool, amount: u64) -> Result<()> {
         let (from, to) = match is_x {
-            true => (self.user_x.to_account_info() , self.vault_x.to_account_info()),
-            false => (self.user_y.to_account_info(), self.vault_y.to_account_info()),
+            true => (self.user_ata_x.to_account_info() , self.vault_x.to_account_info()),
+            false => (self.user_ata_y.to_account_info(), self.vault_y.to_account_info()),
         };
 
         let cpi_program = self.token_program.to_account_info();
@@ -112,8 +122,8 @@ impl<'info> Swap<'info> {
 
     pub fn withdraw_tokens(&mut self, is_x: bool, amount: u64) -> Result<()> {
         let (from, to) = match is_x {
-            true => (self.vault_y.to_account_info() , self.user_y.to_account_info()),
-            false => (self.vault_x.to_account_info(), self.user_x.to_account_info()),
+            true => (self.vault_y.to_account_info() , self.user_ata_y.to_account_info()),
+            false => (self.vault_x.to_account_info(), self.user_ata_x.to_account_info()),
         };
 
         let cpi_program = self.token_program.to_account_info();
@@ -124,12 +134,20 @@ impl<'info> Swap<'info> {
             authority: self.config_pool.to_account_info(),
         };
 
+        let config_amm_key = self.config_amm.key();
+
         let seeds = &[
-            &b"config"[..],
+            b"config_pool",
+            config_amm_key.as_ref(),
             &self.config_pool.pool_seed.to_le_bytes(),
-            &[self.config_pool.config_pool_bump],
         ];
-        let signer_seeds = &[&seeds[..]];
+
+        let signer_seeds: &[&[&[u8]]] = &[&[
+        seeds[0],
+        seeds[1],
+        seeds[2],
+        &[self.config_pool.config_pool_bump],
+        ]];
 
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, accounts, signer_seeds);
 

@@ -58,7 +58,7 @@ pub struct Withdraw<'info> {
         associated_token::mint = mint_x,
         associated_token::authority = user,
     )]
-    pub user_x: Account<'info, TokenAccount>,
+    pub user_ata_x: Account<'info, TokenAccount>,
 
     #[account(
         init_if_needed,
@@ -66,14 +66,14 @@ pub struct Withdraw<'info> {
         associated_token::mint = mint_y,
         associated_token::authority = user,
     )]
-    pub user_y: Account<'info, TokenAccount>,
+    pub user_ata_y: Account<'info, TokenAccount>,
 
     #[account(
         mut,
         associated_token::mint = mint_lp,
         associated_token::authority = user,
     )]
-    pub user_lp: Account<'info, TokenAccount>,
+    pub user_ata_lp: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -111,8 +111,8 @@ impl<'info> Withdraw<'info> {
 
     pub fn withdraw_tokens(&self, is_x: bool, amount: u64) -> Result<()> {
         let (from, to) = match is_x {
-            true => (self.vault_x.to_account_info(), self.user_x.to_account_info()),
-            false => (self.vault_y.to_account_info(), self.user_y.to_account_info()),
+            true => (self.vault_x.to_account_info(), self.user_ata_x.to_account_info()),
+            false => (self.vault_y.to_account_info(), self.user_ata_y.to_account_info()),
         };
 
         let cpi_program = self.token_program.to_account_info();
@@ -150,7 +150,7 @@ impl<'info> Withdraw<'info> {
 
         let cpi_accounts = Burn {
             mint: self.mint_lp.to_account_info(),
-            from: self.user_lp.to_account_info(),
+            from: self.user_ata_lp.to_account_info(),
             authority: self.user.to_account_info(),
         };
 

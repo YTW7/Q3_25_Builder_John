@@ -29,7 +29,7 @@ describe("capstone_launchpad", () => {
   let mintLp: PublicKey;
   let userAtaX: PublicKey;
   let userAtaY: PublicKey;
-  let userLp: PublicKey;
+  let userAtaLp: PublicKey;
   let vaultX: PublicKey;
   let vaultY: PublicKey;
   let configAmmPda: PublicKey;
@@ -68,7 +68,7 @@ describe("capstone_launchpad", () => {
       await getOrCreateAssociatedTokenAccount(connection, (provider.wallet as any).payer, mintY, authority)
     ).address;
 
-    userLp = (
+    userAtaLp = (
       await getOrCreateAssociatedTokenAccount(connection, (provider.wallet as any).payer, mintLp, authority)
     ).address;
 
@@ -84,7 +84,7 @@ describe("capstone_launchpad", () => {
   // Get initial balances
   const initialUserX = await getAccount(connection, userAtaX);
   const initialUserY = await getAccount(connection, userAtaY);
-  const initialUserLp = await getAccount(connection, userLp);
+  const initialUserLp = await getAccount(connection, userAtaLp);
   const initialVaultX = await getAccount(connection, vaultX);
   const initialVaultY = await getAccount(connection, vaultY);
 
@@ -106,9 +106,9 @@ describe("capstone_launchpad", () => {
       mintLp: lpMintPda,          // ✅ use PDA, not hardcoded mint
       vaultX,
       vaultY,
-      userX: userAtaX,
-      userY: userAtaY,
-      userLp,
+      userAtaX: userAtaX,
+      userAtaY: userAtaY,
+      userAtaLp: userAtaLp,
       tokenProgram: TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -120,7 +120,7 @@ describe("capstone_launchpad", () => {
   // Balances after deposit
   const finalUserX = await getAccount(connection, userAtaX);
   const finalUserY = await getAccount(connection, userAtaY);
-  const finalUserLp = await getAccount(connection, userLp);
+  const finalUserLp = await getAccount(connection, userAtaLp);
   const finalVaultX = await getAccount(connection, vaultX);
   const finalVaultY = await getAccount(connection, vaultY);
 
