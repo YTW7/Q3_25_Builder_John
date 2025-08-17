@@ -21,9 +21,14 @@ use anchor_spl::{
 
 #[derive(Accounts)]
 pub struct Stake<'info> {
+
+    #[accoun(mut)]
     pub user: Signer<'info>,
+
     pub mint: Account<'info, Mint>,
+
     pub collection_mint: Account<'info, Mint>,
+
     #[account(
         mut,
         associated_token::mint=mint,
@@ -107,7 +112,7 @@ impl<'info>Stake<'info>{
         let signer_seeds= &[&seeds[..]];
 
         let delegate= &self.stake_account.to_account_info();
-        let token_Account= &self.mint_ata.to_account_info();
+        let token_account= &self.mint_ata.to_account_info();
         let edition= &self.stake_account.to_account_info();
         let mint= &self.mint.to_account_info();
         let token_program= &self.token_program.to_account_info();
@@ -117,7 +122,7 @@ impl<'info>Stake<'info>{
             metadata_program,
             FreezeDelegateAccountCpiAccounts{
                 delegate,
-                token_Account,
+                token_account,
                 edition,
                 mint,
                 token_program

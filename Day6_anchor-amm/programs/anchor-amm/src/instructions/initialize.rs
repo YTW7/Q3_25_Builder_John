@@ -1,19 +1,22 @@
 use anchor_lang::prelude::*;
-use anchor_spl::
+use anchor_spl::{associated_token::AssociatedToken, token::{Mint, Token, TokenAccount}};
 
-#[instructions[seed]]
+use crate::state::Config;
 
 #[derive(Accounts)]
-pub struct Initialize{
+#[instruction(seed: u64)]
+pub struct Initialize<'info>{
     #[account(mut)]
     pub initializer: Signer<'info>,
+
     pub mint_x: Account<'info, Mint>,
+
     pub mint_y: Account<'info, Mint>,
 
     #[account(
         init,
         payer = initializer,
-        seeds = [b"lp", config_key().as_ref()],
+        seeds = [b"lp", config.key().as_ref()],
         bump,
         mint::decimals = 6,
         mint::authority=config,
@@ -23,45 +26,59 @@ pub struct Initialize{
     #[account(
         init,
         payer = initializer,
-        seeds = [b"config", seed.to_le_bytes().as_ref()],
-        bump,
-        space = 8 + Config::INIT_SPACE
-    )]
-    pub mint_y: Account<'info, Config>,    
-
-    #[account(
-        mut,
         associated_token::mint = mint_x,
-        associated_token::authority= config
+        associated_token::authority = config,
     )]
-    pub vault_x: Account<'info, TokenAccount>,
+    pub vault_x: Account<'info, TokenAccount>,    
 
     #[account(
-    mut,
-    associated_token::mint = mint_y,
-    associated_token::authority= config
+        init,
+        payer = initializer,
+        associated_token::mint = mint_y,
+        associated_token::authority= config
     )]
     pub vault_y: Account<'info, TokenAccount>,
 
     #[account(
-    mut,
-    associated_token::mint = mint_x,
-    associated_token::authority= config
-    )]
-    pub user_x: Account<'info, TokenAccount>,
+        init,
+        payer = initializer,
+        seeds = [b"config", seed.to_le_bytes().as_ref()],
+        bump,
+        space = 8 + Config::INIT_SPACE,
 
-    #[account(
-    mut,
-    associated_token::mint = mint_y,
-    associated_token::authority= config
     )]
-    pub user_y: Account<'info, TokenAccount>,
+    pub config: Account<'info, Config>,
 
-    #[account(
-    init_if_needed,
-    payer = user,
-    associated_token::mint = mint_lp,
-    associated_token::authority= config
-    )]
-    pub user_lp: Account<'info, TokenAccount>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
+}
+
+impl<'info>Initialize<'info>{
+    pub fn init(
+        &mut self,
+        seed: u64,
+        fee: u16,
+        authority: Option<Pubkey>,
+        bumps: InitializeBumps
+    ) -> Result<()> {
+
+        self.config.set_inner(
+        Config{
+            seed,
+            authority,
+            mint_x: self.mint_x.key(),
+            mint_y: self.mint_y.key(),
+            mint_lp: self.mint_lp.key(),
+            fee,
+            locked: false,
+            config_bump: bumps.config,
+            lp_bump: bumps.mint_lp,
+
+        });
+
+        Ok(())
+    }
+
+
 }

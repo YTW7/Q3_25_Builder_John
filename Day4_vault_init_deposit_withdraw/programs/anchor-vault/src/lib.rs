@@ -5,7 +5,7 @@ use anchor_lang::{prelude::*, system_program::{Transfer, transfer}};
 pub mod errors;
 use errors::*;
 
-declare_id!("6LEZYLofdHgCdnat4n61RcFmx7832iNcSBq6K63GruHT");
+declare_id!("iYFvHyuS9DVNBhRYBz8So192RMHvk45ztfo9oKAwbWX");
 
 #[program] //progam macro -> entry point of our program
 pub mod anchor_vault {
