@@ -19,6 +19,6 @@ anchor = ["anchor-lang/init_if_needed", "anchor-spl/metadata"]
 
 
 [dependencies]
-anchor-lang = {version= "0.31.1", features =["init_if_needed"]}
-anchor-spl = {version= "0.31.1", features =["metadata"]}
+anchor-lang = {version= "0.31.0", features =["init_if_needed"]}
+anchor-spl = {version= "0.31.0", features =["metadata"]}
 
