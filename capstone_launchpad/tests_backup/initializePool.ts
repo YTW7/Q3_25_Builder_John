@@ -14,7 +14,6 @@ import {
   createInitializeMintInstruction,
 } from "@solana/spl-token";
 import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
-import { AMMTestUtils, AMMTestSetup } from "../helper";
 
 describe("capstone_launchpad", () => {
   // Configure the client to use the local cluster.
@@ -97,6 +96,12 @@ describe("capstone_launchpad", () => {
       .rpc();
 
     console.log("Pool initialized. Tx:", tx);
+
+//     const pools = await program.account.configPool.all();
+// console.log(pools.map(p => ({
+//   pubkey: p.publicKey.toBase58(),
+//   data: p.account
+// })));
   });
 
   });

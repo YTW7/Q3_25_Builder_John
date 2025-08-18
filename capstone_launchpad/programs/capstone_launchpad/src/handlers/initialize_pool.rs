@@ -75,7 +75,9 @@ impl<'info> InitializePool<'info> {
         fee: u16,
         authority: Option<Pubkey>,
         bumps: InitializePoolBumps,
+        
     ) -> Result<()> {
+        let clock = Clock::get()?;
     self.config_pool.set_inner(ConfigPool {
             pool_seed: pool_seed,
             authority,
@@ -85,6 +87,8 @@ impl<'info> InitializePool<'info> {
             locked: false,
             config_pool_bump: bumps.config_pool,
             lp_bump: bumps.mint_lp,
+            created_at: clock.unix_timestamp,
+            
         });
         Ok(())
     }

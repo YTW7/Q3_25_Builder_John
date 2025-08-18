@@ -16,6 +16,16 @@ function formatAmount(amount: any) {
   return Number(amount.toString()) / 1_000_000;
 }
 
+const TOKEN_METADATA_PROGRAM_ID = new PublicKey(
+  "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+);
+
+const metadata = {
+  uri: "https://raw.githubusercontent.com/solana-developers/program-examples/new-examples/tokens/tokens/.assets/spl-token.json",
+  name: "Solana Gold",
+  symbol: "GOLDSOL",
+};
+
 describe("tikr dot fun tests begins...", () => {
   // Configure the client to use the local cluster.
   const provider=anchor.AnchorProvider.env();
@@ -25,7 +35,10 @@ describe("tikr dot fun tests begins...", () => {
   anchor.setProvider(provider);
   const program = anchor.workspace.capstoneLaunchpad as Program<CapstoneLaunchpad>;
 
-  const seed_string = 7;
+  // Generate a Keypair for the new mint
+   const newMint = anchor.web3.Keypair.generate();
+
+  const seed_string = 9;
   const ammSeed = new anchor.BN(seed_string); // pick your seed
   const poolSeed = new anchor.BN(seed_string);
   const fee = 30; //0.3%
@@ -69,7 +82,67 @@ describe("tikr dot fun tests begins...", () => {
        configPoolPda,
        true
     );
+it("Create Token...", async () => {
+    // Derive the metadata PDA
+    const [metadataPda] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("metadata"),
+        TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+        newMint.publicKey.toBuffer(),
+      ],
+      TOKEN_METADATA_PROGRAM_ID
+    );
 
+    console.log("Mint:", newMint.publicKey.toBase58());
+    console.log("Metadata PDA:", metadataPda.toBase58());
+
+    // Build the transaction - Remove user_ata_new if it's not needed for mint creation
+    const tx = await program.methods
+      .createMint(metadata.uri, metadata.name, metadata.symbol)
+      .accounts({
+        admin: authority,
+        newTokenMint: newMint.publicKey,
+        metadataAccount: metadataPda,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+      })
+      .signers([newMint])
+      .rpc();
+
+    console.log("Token created. Tx:", tx);
+  });
+
+  it("Mint Token...", async () => {
+    // Create the associated token account for the user
+    const userAtaNew = await getOrCreateAssociatedTokenAccount(
+      connection, 
+      (provider.wallet as any).payer, 
+      newMint.publicKey, 
+      authority
+    );
+
+    console.log("User ATA:", userAtaNew.address.toBase58());
+
+    const amount = new anchor.BN(100 * 10 ** 9); // 100 tokens with 9 decimals
+
+    // Build the transaction
+    const tx = await program.methods
+      .mintToken(amount)
+      .accounts({
+        admin: authority,
+        newTokenMint: newMint.publicKey,
+        userAtaNew: userAtaNew.address, // Use the address property
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      })
+    //   .signers([newMint])
+      .rpc();
+
+    console.log(`${amount} of new token Minted. Tx:`, tx);
+  });
 
   it("Initializes AMM!", async () => {
     // Add your test here.

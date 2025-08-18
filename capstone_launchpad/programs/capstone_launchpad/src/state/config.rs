@@ -24,6 +24,7 @@ pub struct ConfigPool{
     pub locked: bool, // If the pool is locked
     pub config_pool_bump: u8, // Bump seed for the config account
     pub lp_bump: u8, // Bump seed for the LP token
+    pub created_at: i64,
 }
 
 // impl Space for Config {
